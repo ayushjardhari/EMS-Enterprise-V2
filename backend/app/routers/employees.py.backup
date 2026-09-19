@@ -1,0 +1,144 @@
+import uuid
+
+from fastapi import APIRouter, Depends, File, UploadFile, status
+from sqlalchemy.orm import Session
+
+from app.core.deps import get_current_user, get_db, require_roles
+from app.models.employee import AvailabilityStatus, EmploymentStatus
+from app.models.user import UserRole
+from app.schemas.common import Page
+from app.schemas.document import DocumentOut
+from app.schemas.employee import (
+    EmployeeCreate,
+    EmployeeListItem,
+    EmployeeProfileOut,
+    EmployeeStatusUpdate,
+    EmployeeUpdate,
+)
+from app.schemas.employee_project import EmployeeProjectCreate, EmployeeProjectOut
+from app.schemas.employee_skill import EmployeeSkillCreate, EmployeeSkillOut, EmployeeSkillUpdate
+from app.services.document_service import DocumentService
+from app.services.employee_project_service import EmployeeProjectService
+from app.services.employee_service import EmployeeService
+from app.services.employee_skill_service import EmployeeSkillService
+
+router = APIRouter(prefix="/api/v1/employees", tags=["employees"])
+
+HR_ADMIN = require_roles(UserRole.ADMIN, UserRole.HR)
+
+
+@router.get("", response_model=Page[EmployeeListItem])
+def list_employees(
+    search: str | None = None,
+    department_id: uuid.UUID | None = None,
+    job_role_id: uuid.UUID | None = None,
+    employment_status: EmploymentStatus | None = None,
+    availability_status: AvailabilityStatus | None = None,
+    page: int = 1,
+    limit: int = 25,
+    db: Session = Depends(get_db),
+    _: object = Depends(get_current_user),
+):
+    items, total = EmployeeService(db).search_employees(
+        search=search,
+        department_id=department_id,
+        job_role_id=job_role_id,
+        employment_status=employment_status,
+        availability_status=availability_status,
+        page=page,
+        limit=limit,
+    )
+    return Page(items=items, total=total, page=page, limit=limit)
+
+
+@router.get("/{employee_id}", response_model=EmployeeProfileOut)
+def get_employee(employee_id: uuid.UUID, db: Session = Depends(get_db), _: object = Depends(get_current_user)):
+    return EmployeeService(db).get_employee_profile(employee_id)
+
+
+@router.post("", response_model=EmployeeProfileOut, status_code=status.HTTP_201_CREATED)
+def create_employee(payload: EmployeeCreate, db: Session = Depends(get_db), _: object = Depends(HR_ADMIN)):
+    employee = EmployeeService(db).create_employee(payload)
+    return EmployeeService(db).get_employee_profile(employee.id)
+
+
+@router.put("/{employee_id}", response_model=EmployeeProfileOut)
+def update_employee(
+    employee_id: uuid.UUID, payload: EmployeeUpdate, db: Session = Depends(get_db), _: object = Depends(HR_ADMIN)
+):
+    EmployeeService(db).update_employee(employee_id, payload)
+    return EmployeeService(db).get_employee_profile(employee_id)
+
+
+@router.patch("/{employee_id}/status", response_model=EmployeeProfileOut)
+def update_employee_status(
+    employee_id: uuid.UUID, payload: EmployeeStatusUpdate, db: Session = Depends(get_db), _: object = Depends(HR_ADMIN)
+):
+    EmployeeService(db).set_employment_status(employee_id, payload.employment_status)
+    return EmployeeService(db).get_employee_profile(employee_id)
+
+
+# --- Employee skills ---
+
+@router.get("/{employee_id}/skills", response_model=list[EmployeeSkillOut])
+def list_employee_skills(employee_id: uuid.UUID, db: Session = Depends(get_db), _: object = Depends(get_current_user)):
+    return EmployeeSkillService(db).list_skills(employee_id)
+
+
+@router.post("/{employee_id}/skills", response_model=EmployeeSkillOut, status_code=status.HTTP_201_CREATED)
+def add_employee_skill(
+    employee_id: uuid.UUID, payload: EmployeeSkillCreate, db: Session = Depends(get_db), _: object = Depends(HR_ADMIN)
+):
+    return EmployeeSkillService(db).add_skill(employee_id, payload)
+
+
+@router.put("/{employee_id}/skills/{skill_id}", response_model=EmployeeSkillOut)
+def update_employee_skill(
+    employee_id: uuid.UUID,
+    skill_id: uuid.UUID,
+    payload: EmployeeSkillUpdate,
+    db: Session = Depends(get_db),
+    _: object = Depends(HR_ADMIN),
+):
+    return EmployeeSkillService(db).update_skill(employee_id, skill_id, payload)
+
+
+@router.delete("/{employee_id}/skills/{skill_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_employee_skill(
+    employee_id: uuid.UUID, skill_id: uuid.UUID, db: Session = Depends(get_db), _: object = Depends(HR_ADMIN)
+):
+    EmployeeSkillService(db).remove_skill(employee_id, skill_id)
+
+
+# --- Employee projects ---
+
+@router.get("/{employee_id}/projects", response_model=list[EmployeeProjectOut])
+def list_employee_projects(employee_id: uuid.UUID, db: Session = Depends(get_db), _: object = Depends(get_current_user)):
+    return EmployeeProjectService(db).list_for_employee(employee_id)
+
+
+@router.post("/{employee_id}/projects", response_model=EmployeeProjectOut, status_code=status.HTTP_201_CREATED)
+def add_employee_project(
+    employee_id: uuid.UUID,
+    payload: EmployeeProjectCreate,
+    db: Session = Depends(get_db),
+    _: object = Depends(require_roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER)),
+):
+    return EmployeeProjectService(db).add_project(employee_id, payload)
+
+
+# --- Employee documents ---
+
+@router.get("/{employee_id}/documents", response_model=list[DocumentOut])
+def list_employee_documents(employee_id: uuid.UUID, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    return DocumentService(db).list_documents(employee_id, user)
+
+
+@router.post("/{employee_id}/documents", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
+def upload_employee_document(
+    employee_id: uuid.UUID,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    return DocumentService(db).upload_document(employee_id, file, user)
