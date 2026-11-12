@@ -11,6 +11,7 @@ class DocumentOut(BaseModel):
     file_type: str
     uploaded_at: datetime
     extraction_status: str
+    indexing_status: str = "NOT_INDEXED"
 
     class Config:
         from_attributes = True

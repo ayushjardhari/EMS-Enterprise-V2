@@ -1,3 +1,8 @@
+import os
+
+# Never load the embedding model during unit tests.
+os.environ.setdefault("AUTO_INDEX_ON_UPLOAD", "false")
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

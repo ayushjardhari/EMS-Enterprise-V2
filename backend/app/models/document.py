@@ -21,5 +21,11 @@ class Document(Base):
     extraction_status: Mapped[str] = mapped_column(String(30), nullable=False, default="NOT_PROCESSED")
     extracted_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     extracted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # NOT_INDEXED -> INDEXED | SKIPPED (no extracted text) | FAILED (embedding error)
+    indexing_status: Mapped[str] = mapped_column(String(30), nullable=False, default="NOT_INDEXED", server_default="NOT_INDEXED")
+    indexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     employee: Mapped["Employee"] = relationship(back_populates="documents")
+    chunks: Mapped[list["DocumentChunk"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan", passive_deletes=True
+    )

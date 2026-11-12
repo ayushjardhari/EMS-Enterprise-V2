@@ -15,5 +15,6 @@ from app.models.employee_skill import EmployeeSkill  # noqa: F401
 from app.models.project import Project  # noqa: F401
 from app.models.employee_project import EmployeeProject  # noqa: F401
 from app.models.document import Document  # noqa: F401
+from app.models.document_chunk import DocumentChunk  # noqa: F401
 from app.models.attendance import Attendance  # noqa: F401
 from app.models.hr import LeaveType, LeaveBalance, LeaveRequest, SalaryProfile, PayrollRun, PayrollRecord, AuditLog  # noqa: F401

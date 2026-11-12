@@ -31,6 +31,13 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 120
 
+    # --- Embeddings / semantic search ---
+    # EMBEDDING_DIM must match the vector(N) column created in migration 0004.
+    # Changing the model to one with a different dimension needs a new migration.
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    EMBEDDING_DIM: int = 384
+    AUTO_INDEX_ON_UPLOAD: bool = True
+
     # --- CORS ---
     CORS_ORIGINS: str = "http://localhost:5173"
 

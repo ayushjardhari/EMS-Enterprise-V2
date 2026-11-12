@@ -12,6 +12,7 @@ from app.models.user import User, UserRole
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.employee_repository import EmployeeRepository
 from app.services.document_extraction import extract_text
+from app.services.document_indexing_service import DocumentIndexingService
 
 ALLOWED_CONTENT_TYPES = {
     "application/pdf",
@@ -82,11 +83,15 @@ class DocumentService:
                 document.extraction_status = "COMPLETED"
             else:
                 document.extraction_status = "NOT_SUPPORTED"
-            return self.repo.create(document)
+            created = self.repo.create(document)
         except Exception:
             # Never leave an orphaned object when metadata creation/extraction fails.
             minio_client.remove_object(settings.MINIO_BUCKET_NAME, storage_path)
             raise
+        if settings.AUTO_INDEX_ON_UPLOAD and created.extraction_status == "COMPLETED":
+            # Chunk + embed for semantic search. Never fails the upload itself.
+            DocumentIndexingService(self.db).index_document_safely(created)
+        return created
 
     def get_download_url(self, document_id: uuid.UUID, user: User) -> str:
         document = self.repo.get_by_id(document_id)
