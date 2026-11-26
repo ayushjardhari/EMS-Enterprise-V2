@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.minio_client import ensure_bucket_exists
 import app.models  # noqa: F401 — registers all models on Base.metadata
-from app.routers import attendance, auth, dashboard, departments, documents, employees, job_roles, projects, skills, hr
+from app.routers import attendance, auth, dashboard, departments, documents, employees, job_roles, matching, projects, skills, hr
 
 app = FastAPI(title="Employee Management System API", version="1.0.0")
 
@@ -44,3 +44,4 @@ app.include_router(projects.router)
 app.include_router(documents.router)
 app.include_router(dashboard.router)
 app.include_router(hr.router)
+app.include_router(matching.router)

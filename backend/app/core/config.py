@@ -38,6 +38,14 @@ class Settings(BaseSettings):
     EMBEDDING_DIM: int = 384
     AUTO_INDEX_ON_UPLOAD: bool = True
 
+    # --- LLM (OpenAI-compatible chat API; Groq free plan by default) ---
+    # Leave LLM_API_KEY empty to disable the LLM: explanations then fall back to templates.
+    LLM_API_KEY: str = ""
+    LLM_BASE_URL: str = "https://api.groq.com/openai/v1"
+    LLM_MODEL: str = "openai/gpt-oss-20b"
+    LLM_REASONING_EFFORT: str = "low"   # sent only if non-empty; set to "" for models that reject it
+    LLM_TIMEOUT_SECONDS: float = 30.0
+
     # --- CORS ---
     CORS_ORIGINS: str = "http://localhost:5173"
 

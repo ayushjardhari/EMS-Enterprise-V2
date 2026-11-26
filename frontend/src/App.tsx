@@ -13,6 +13,7 @@ import RolesPage from './pages/RolesPage';
 import SkillsPage from './pages/SkillsPage';
 import ProtectedRoute from './router/ProtectedRoute';
 import EnterprisePage from './pages/EnterprisePage';
+import StaffingPage from './pages/StaffingPage';
 export default function App()
     {return <Routes>
         <Route path="/login" element={<LoginPage/>}/>
@@ -31,6 +32,8 @@ export default function App()
         <Route element={<ProtectedRoute allowedRoles={['ADMIN','HR']}/>}>
         <Route path="/employees/new" element={<AddEmployeePage/>}/>
         <Route path="/employees/:id/edit" element={<EditEmployeePage/>}/></Route>
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN','HR','MANAGER']}/>}>
+        <Route path="/matching" element={<StaffingPage/>}/></Route>
         <Route path="/projects" element={<ProjectsPage/>}/>
         <Route path="/projects/:id" element={<ProjectDetailsPage/>}/>
         <Route path="/departments" element={<DepartmentsPage/>}/>

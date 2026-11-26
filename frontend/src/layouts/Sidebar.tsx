@@ -10,6 +10,7 @@ const groups: Group[] = [
     { to: '/dashboard', label: 'Overview', icon: '⌂', roles: ['ADMIN','HR','MANAGER','EMPLOYEE'] },
     { to: '/employees', label: 'People', icon: '○', roles: ['ADMIN','HR','MANAGER','EMPLOYEE'] },
     { to: '/projects', label: 'Projects', icon: '▦', roles: ['ADMIN','HR','MANAGER','EMPLOYEE'] },
+    { to: '/matching', label: 'Talent match', icon: '✧', roles: ['ADMIN','HR','MANAGER'] },
   ]},
   { label: 'PEOPLE OPERATIONS', items: [
     { to: '/attendance', label: 'Attendance', icon: '◷', roles: ['ADMIN','HR','MANAGER','EMPLOYEE'] },
